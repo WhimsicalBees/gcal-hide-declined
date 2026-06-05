@@ -185,46 +185,53 @@ Expected: FAIL — `findDeclinedEvents is not a function` / module not found.
 
 - [ ] **Step 3: Write minimal implementation**
 
+> **Signal confirmed by Task 2 capture:** The current Google Calendar DOM has
+> **no strikethrough** on declined events (the original design assumption was
+> wrong). The durable signal is the screen-reader text in `div.XuJrye`, a
+> comma-delimited string whose RSVP status is its own field
+> (`..., Sample User, Declined, No location, ...` vs `..., Accepted, ...`).
+> We match `Declined` as a delimited token — NOT a loose substring — because
+> event titles can contain commas and arbitrary words (one real accepted event's
+> title is a long comma-laden string with a URL).
+
 ```js
 // src/detect.js
 // Detect declined events in a rendered Google Calendar DOM subtree.
 // This is the single fragile unit. If Google changes its markup, the
 // constants/queries here are the only thing that should need editing.
 
-// An element's title is considered "declined-styled" if it (or a descendant)
-// is struck through. Google renders declined events with line-through.
-function hasStrikethrough(el) {
-  if (!el) return false;
-  // Inline style is the most direct signal in jsdom and in-page.
-  const nodes = [el, ...el.querySelectorAll("*")];
-  return nodes.some((n) => {
-    const inline = n.style && n.style.textDecoration;
-    if (inline && inline.includes("line-through")) return true;
-    return n.tagName === "S" || n.tagName === "DEL";
-  });
+// The accessibility/screen-reader label for an event chip lives in this
+// descendant. It is a comma-delimited string that includes the RSVP status
+// as a discrete field.
+const LABEL_SELECTOR = "div.XuJrye";
+
+// Event chip roots in the rendered grid.
+const EVENT_SELECTOR = '[data-eventid][role="button"]';
+
+// Match "Declined" only when it stands alone as a comma-delimited field,
+// e.g. ", Declined," — so titles containing the word "declined" don't match.
+// Anchored with start/comma on the left and comma/end on the right, tolerant
+// of surrounding whitespace (incl. non-breaking spaces).
+const DECLINED_FIELD = /(^|,)\s*Declined\s*(,|$)/;
+
+function labelText(eventEl) {
+  const label = eventEl.querySelector(LABEL_SELECTOR);
+  return label ? label.textContent : "";
 }
 
-// Backstop: aria-label mentioning declined status.
-function ariaSaysDeclined(el) {
-  const label = el.getAttribute && el.getAttribute("aria-label");
-  return !!label && /declin/i.test(label);
+// Returns true if this event chip's accessibility label marks it declined.
+function isDeclined(eventEl) {
+  return DECLINED_FIELD.test(labelText(eventEl));
 }
 
-// Walk candidate event elements. Google event chips expose role="button"
-// with an aria-label; we scan those plus any element carrying an aria-label.
+// Find all declined event chip elements under `root`.
+// Fail-safe: returns [] for a missing/invalid root or when nothing matches.
 export function findDeclinedEvents(root) {
   if (!root || typeof root.querySelectorAll !== "function") return [];
-  const candidates = new Set([
-    ...root.querySelectorAll('[role="button"][aria-label]'),
-    ...root.querySelectorAll("[data-eventid]"),
-  ]);
-  // If neither selector matched, fall back to any element with an aria-label.
-  if (candidates.size === 0) {
-    root.querySelectorAll("[aria-label]").forEach((n) => candidates.add(n));
-  }
+  const events = root.querySelectorAll(EVENT_SELECTOR);
   const declined = [];
-  candidates.forEach((el) => {
-    if (hasStrikethrough(el) || ariaSaysDeclined(el)) declined.push(el);
+  events.forEach((el) => {
+    if (isDeclined(el)) declined.push(el);
   });
   return declined;
 }
@@ -233,7 +240,9 @@ export function findDeclinedEvents(root) {
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- tests/detect.test.js`
-Expected: PASS (3 tests). If the declined/accepted assertions fail, the real fixture differs from expected — adjust `hasStrikethrough`/`ariaSaysDeclined` per Task 2's README analysis, then re-run.
+Expected: PASS (3 tests). The declined fixture's `.XuJrye` text contains
+`, Declined,` (matches); the accepted fixture contains `, Accepted,` (no match)
+even though its long title has many commas.
 
 - [ ] **Step 5: Commit**
 
