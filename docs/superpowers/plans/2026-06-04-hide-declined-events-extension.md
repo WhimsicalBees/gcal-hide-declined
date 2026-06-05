@@ -505,7 +505,16 @@ git commit -m "feat: add toolbar popup toggle"
 **Files:**
 - Create: `manifest.json`
 
-Content script uses ES module `import`, so it loads as a module via `"type": "module"` on the content script entry. `detect.js` and `storage.js` are imported by it and must be web-accessible to the module loader.
+> **Correction (discovered during implementation):** MV3 manifest-declared
+> content scripts do **not** support static `import` — there is no
+> `"type": "module"` key for `content_scripts` entries (that key only applies
+> to the background service worker). The original plan was wrong here. The fix:
+> `content.js` uses **dynamic `import()`** via `chrome.runtime.getURL(...)`, and
+> `detect.js`/`storage.js` are exposed in `web_accessible_resources` so the
+> module loader can fetch them. `detect.js` and `storage.js` are unchanged
+> (their tests still pass); only `content.js` and this manifest differ from the
+> originally-drafted code. The manifest below is the corrected version — note
+> the absence of `"type": "module"`.
 
 - [ ] **Step 1: Write `manifest.json`**
 
@@ -525,7 +534,6 @@ Content script uses ES module `import`, so it loads as a module via `"type": "mo
       "matches": ["https://calendar.google.com/*"],
       "js": ["src/content.js"],
       "css": ["src/hide-declined.css"],
-      "type": "module",
       "run_at": "document_idle"
     }
   ],
