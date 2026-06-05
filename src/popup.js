@@ -1,5 +1,6 @@
 // Popup uses chrome.storage directly (it can't import ES modules without
 // type=module wiring; keep it dependency-free and inline-simple).
+// KEY must match HIDE_KEY in storage.js.
 const KEY = "hideDeclined";
 const toggle = document.getElementById("toggle");
 
