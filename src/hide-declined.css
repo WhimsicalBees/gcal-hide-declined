@@ -1,0 +1,4 @@
+/* When the root carries this class, any element we tagged as declined hides. */
+.gce-hide-declined [data-gce-declined="true"] {
+  display: none !important;
+}
