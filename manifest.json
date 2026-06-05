@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Hide Declined Events for Google Calendar",
+  "version": "0.1.0",
+  "description": "Toggle to hide or show declined events on Google Calendar.",
+  "permissions": ["storage"],
+  "action": {
+    "default_title": "Hide declined events",
+    "default_popup": "src/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["src/content.js"],
+      "css": ["src/hide-declined.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/detect.js", "src/storage.js"],
+      "matches": ["https://calendar.google.com/*"]
+    }
+  ]
+}

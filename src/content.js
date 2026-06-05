@@ -1,9 +1,16 @@
 // src/content.js
-import { findDeclinedEvents } from "./detect.js";
-import { getHideState, HIDE_KEY } from "./storage.js";
+// Manifest-declared MV3 content scripts cannot use static `import` (there is no
+// "type":"module" for content_scripts). We load the detection and storage
+// modules dynamically via chrome.runtime.getURL — they are declared in the
+// manifest's web_accessible_resources so the module loader can fetch them.
 
 const ROOT_CLASS = "gce-hide-declined";
 const TAG_ATTR = "data-gce-declined";
+
+// Bound from the dynamically imported modules in init().
+let findDeclinedEvents;
+let getHideState;
+let HIDE_KEY;
 
 function tagDeclined() {
   // Clear stale tags, then re-tag. Cheap relative to Google's own re-renders.
@@ -29,12 +36,18 @@ function scheduleRetag() {
 }
 
 async function init() {
+  // Dynamic import of extension-internal ES modules (see header note).
+  const detect = await import(chrome.runtime.getURL("src/detect.js"));
+  const storage = await import(chrome.runtime.getURL("src/storage.js"));
+  findDeclinedEvents = detect.findDeclinedEvents;
+  getHideState = storage.getHideState;
+  HIDE_KEY = storage.HIDE_KEY;
+
   tagDeclined();
 
   // Start observing BEFORE the async storage read so mutations during the
-  // await gap (Google's SPA may still be settling at document_idle) aren't
-  // missed. The observer and listener live for the page's lifetime; nothing
-  // to disconnect.
+  // await gap (Google's SPA may still be settling) aren't missed. The observer
+  // and listener live for the page's lifetime; nothing to disconnect.
   const observer = new MutationObserver(scheduleRetag);
   observer.observe(document.body, { childList: true, subtree: true });
 
