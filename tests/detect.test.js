@@ -37,4 +37,10 @@ describe("findDeclinedEvents", () => {
     expect(Array.isArray(found)).toBe(true);
     expect(found.length).toBe(0);
   });
+
+  it("returns empty array for null/invalid root (fail-safe)", () => {
+    expect(findDeclinedEvents(null)).toEqual([]);
+    expect(findDeclinedEvents(undefined)).toEqual([]);
+    expect(findDeclinedEvents("not an element")).toEqual([]);
+  });
 });
