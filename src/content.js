@@ -68,9 +68,12 @@ function scheduleRetag() {
 
 async function init() {
   // Dynamic import of extension-internal ES modules (see header note).
-  const detect = await import(chrome.runtime.getURL("src/detect.js"));
-  const storage = await import(chrome.runtime.getURL("src/storage.js"));
-  const toggle = await import(chrome.runtime.getURL("src/toggle-button.js"));
+  // Loaded in parallel — they have no inter-dependency at import time.
+  const [detect, storage, toggle] = await Promise.all([
+    import(chrome.runtime.getURL("src/detect.js")),
+    import(chrome.runtime.getURL("src/storage.js")),
+    import(chrome.runtime.getURL("src/toggle-button.js")),
+  ]);
   findDeclinedEvents = detect.findDeclinedEvents;
   getHideState = storage.getHideState;
   setHideState = storage.setHideState;
@@ -85,6 +88,9 @@ async function init() {
   const observer = new MutationObserver(scheduleRetag);
   observer.observe(document.body, { childList: true, subtree: true });
 
+  // If a mutation fired during the await above, ensureButton may have already
+  // mounted the button at the default (shown) state — a ≤1-frame flash that
+  // self-corrects here once the stored state resolves.
   applyHideState(await getHideState()); // sets currentHide
   tagDeclined(); // re-tag in case the DOM changed during the await
   ensureButton(); // mount the button with the correct initial state
