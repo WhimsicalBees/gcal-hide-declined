@@ -18,7 +18,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/detect.js", "src/storage.js"],
+      "resources": ["src/detect.js", "src/storage.js", "src/toggle-button.js"],
       "matches": ["https://calendar.google.com/*"]
     }
   ]
