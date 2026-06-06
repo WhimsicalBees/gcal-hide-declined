@@ -1,7 +1,9 @@
 # DOM Fixtures
 
-Captured from the live Google Calendar Week view on 2026-06-04 (account
-`you@example.com`). These are ground truth for `src/detect.js`.
+Captured from the live Google Calendar Week view, then **sanitized**: the real
+account email, event IDs, meeting titles, and any location/URL were replaced
+with placeholder values. The detection-relevant structure is preserved exactly.
+These are ground truth for `src/detect.js`.
 
 ## Files
 
@@ -22,11 +24,11 @@ screen-reader label. It is a comma-delimited string with the RSVP status as its
 own field:
 
 - Declined: `10:30am to 12pm, Team Sync, Sample User, Declined, No location, Color: Team Meetings, June 2, 2026`
-- Accepted: `12pm to 12:30pm, Tech Proposal Review: ... , Sample User, Accepted, Location: https://..., June 2, 2026`
+- Accepted: `12pm to 12:30pm, Planning Review: ... , Sample User, Accepted, Location: Conference Room A, June 2, 2026`
 
 ### Why match the delimited field, not a substring
 
-The accepted event's **title** contains many commas and a URL. A naive
+The accepted event's **title** contains many commas. A naive
 "does the text contain 'declined'?" check is fragile — an event titled
 "Project declined-proposal review" would false-positive. The detector must
 match `Declined` as a **comma-delimited token** (surrounded by `, ` / `,`),
