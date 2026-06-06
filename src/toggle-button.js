@@ -36,9 +36,14 @@ function injectStyle() {
 function render(button, on) {
   const isOn = on === true;
   button.setAttribute("data-on", isOn ? "true" : "false");
+  button.setAttribute("aria-pressed", isOn ? "true" : "false");
   button.textContent = isOn ? LABEL_ON : LABEL_OFF;
 }
 
+// Mount the floating toggle button. Idempotent: if a button already exists,
+// it is reused and its original click handler (and original onToggle) is kept —
+// the onToggle passed on a re-mount call is ignored. Callers that re-assert the
+// button should pass the same logical onToggle each time.
 export function mountToggleButton({ initialOn, onToggle }) {
   injectStyle();
   let button = document.querySelector(`[${BUTTON_ATTR}]`);

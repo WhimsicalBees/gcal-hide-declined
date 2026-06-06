@@ -50,4 +50,22 @@ describe("mountToggleButton", () => {
     mountToggleButton({ initialOn: false, onToggle: () => {} });
     expect(document.querySelectorAll(SEL).length).toBe(1);
   });
+
+  it("sets aria-pressed to reflect state", () => {
+    const handle = mountToggleButton({ initialOn: false, onToggle: () => {} });
+    const btn = document.querySelector(SEL);
+    expect(btn.getAttribute("aria-pressed")).toBe("false");
+    handle.setButtonState(true);
+    expect(btn.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("keeps the original onToggle when re-mounted (callback not replaced)", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    mountToggleButton({ initialOn: false, onToggle: first });
+    mountToggleButton({ initialOn: false, onToggle: second });
+    document.querySelector(SEL).click();
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
 });
