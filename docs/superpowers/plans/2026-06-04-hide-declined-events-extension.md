@@ -566,7 +566,7 @@ git commit -m "feat: add MV3 manifest"
 
 - [ ] **Step 1: Load the unpacked extension**
 
-Ask the user to: open `chrome://extensions`, enable Developer mode, click "Load unpacked", select the project root (`PROJECTROOT`).
+Ask the user to: open `chrome://extensions`, enable Developer mode, click "Load unpacked", select the project root.
 Expected: extension appears with no errors. If "Service worker / module" errors appear, capture the exact text.
 
 - [ ] **Step 2: Verify default state (shown)**
